@@ -1,9 +1,71 @@
-.tab {
+.moderator-container {
+  padding-bottom: 2.9% !important;
+  padding-top: 3.4vw !important;
+}
+.moderator-container .tab {
   margin-left: 20vw;
 }
-::ng-deep .mat-mdc-tab-body.mat-mdc-tab-body-active {
+.moderator-container ::ng-deep .mat-mdc-tab-body.mat-mdc-tab-body-active {
   height: 100vh;
-  overflow: scroll!important;
   padding-left: 1vw;
   padding-right: 1vw;
+}
+.moderator-container ::ng-deep .mat-mdc-tab-body-content {
+  padding-bottom: 7rem;
+}
+.moderator-container .mat-mdc-tab-header {
+  border-bottom: 1px solid #dfdfdf;
+}
+.moderator-container .mdc-tab-indicator__content--underline {
+  --mdc-tab-indicator-active-indicator-color: #284168;
+}
+.moderator-container .conflict-container {
+  border-radius: 0.5rem;
+  border-style: solid;
+  border-color: #f34248b0;
+  padding: 0.2rem;
+}
+.moderator-container .conflict-container .conflict {
+  color: #284168;
+  background-color: #ff00004d;
+  border-style: solid;
+}
+.moderator-container .conflict-container .conflict .time {
+  color: #c23535;
+}
+.moderator-container .conflict-container .conflict .mat-mdc-card-header {
+  align-items: center;
+}
+.moderator-container .moderator-list-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4vw;
+}
+.moderator-container .moderator-list-container .moderator-list-title {
+  margin-block: 2rem;
+  font-size: 1.5rem;
+}
+.moderator-container .moderator-list-container .mat-expansion-panel-header {
+  font-size: unset;
+}
+.moderator-container .moderator-list-container .mat-expansion-panel-header .mat-expansion-panel-header-title {
+  margin-right: 0;
+}
+.moderator-container .moderator-list-container .mat-expansion-panel-header .mat-expansion-panel-header-description {
+  margin-right: 450px;
+  color: #c23535;
+}
+.moderator-container .badge {
+  background-color: #c23535;
+  color: #ffffff;
+  font-size: 1vw;
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 0.8vh;
+  padding-inline: 1.2vh;
+  margin-left: 10px;
+}
+.mdc-tab__text-label {
+  font-size: 1vw !important;
 }
