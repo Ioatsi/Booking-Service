@@ -77,7 +77,7 @@ export class SidebarService {
   ];
   readonly filteredItems$: Observable<MenuItem[]> = this.authenticationService.currentUser$.pipe(
     map((user) => {
-      const role = user?.roles;
+      const role = user?.roles || ['guest'];
       return this.mainItems.filter((item: MenuItem) => role && item.roles.includes(role.join('')));
     })
   );
