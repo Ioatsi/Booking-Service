@@ -1,12 +1,11 @@
 [build]
-  # This command installs dependencies with legacy-peer-deps and then builds the Angular app
-  command = "npm install --force --legacy-peer-deps && npm run build --configuration=production"
+# Install dependencies with legacy-peer-deps and build the Angular app
+command = "npm install --force --legacy-peer-deps && npm run build --configuration=production"
 
-  # The folder Netlify should serve
-  publish = "dist/booking-service"
+# The folder Netlify should serve
+publish = "dist/booking-service"
 
-  # Environment variables
-  environment = { 
-    NODE_VERSION = "22",        # match your local Node.js version
-    NPM_FLAGS = "--legacy-peer-deps"   # pass flags to Netlify's automatic npm install
-  }
+# Environment variables (no comments inside braces)
+[build.environment]
+NODE_VERSION = "22"
+NPM_FLAGS = "--legacy-peer-deps"
