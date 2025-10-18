@@ -3,7 +3,7 @@
 command = "npm install --force --legacy-peer-deps && npm run build --configuration=production"
 
 # The folder Netlify should serve
-publish = "dist/booking-service"
+publish = "dist"
 
 # Environment variables (no comments inside braces)
 [build.environment]
