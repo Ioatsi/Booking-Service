@@ -40,7 +40,7 @@
                         <mat-card-subtitle>
                             <span class="time" *ngIf="!isRecurring">
                                 {{ booking.start | date: 'EEEE d/MM yyyy' }} {{ booking.start | date: 'HH:mm' }} -
-                                {{ booking.end | date: 'HH:mm' }} |
+                                {{ booking.end | date: 'HH:mm' }}
                             </span>
                             <span *ngFor="let day of booking.days" class="time">
                                 {{ rooms[day.room_id-1]?.name }} -
