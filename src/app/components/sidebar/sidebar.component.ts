@@ -40,4 +40,19 @@ export class SidebarComponent implements OnInit {
   login(){
     this.router.navigate(['/login']);
   }
+  logout(){    
+    this.authenticationService.logout().subscribe((response) => {
+      this.router.navigate(['/']);
+    });
+  }
+  doAction(item: MenuItem) {
+    switch (item.action) {
+      case "changeLocation":
+        this.changeLocation(item.location);
+        break;
+      case "logout":
+        this.logout();
+        break;
+    }
+  }
 }

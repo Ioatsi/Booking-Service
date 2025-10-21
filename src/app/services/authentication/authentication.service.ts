@@ -2,21 +2,26 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
-import { BehaviorSubject, map, Observable } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, of, switchMap, throwError } from 'rxjs';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 
+import { jwtDecode } from 'jwt-decode';
 
 export interface User {
   email: string;
   id: number;
   username: string;
-  roles: ['admin' | 'moderator' | 'guest'| 'faculty'];
+  roles: ['admin' | 'moderator' | 'guest' | 'faculty'];
+}
+export interface JwtPayload {
+  exp: number;
+  iat: number;
+  // add more claims if needed
 }
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
-  
   private currentUserSubject = new BehaviorSubject<User | null>(
     {
       email: '',
@@ -25,27 +30,25 @@ export class AuthenticationService {
       roles: ['guest']
     }
   );
+
   currentUser$: Observable<User | null> = this.currentUserSubject.asObservable();
-  private tokenKey = 'auth_token';
+  private accessToken: string | null = null;
+  private isRefreshing = false;
+  private refreshSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+
+  private isAuthenticated$ = new BehaviorSubject<boolean>(false);
+
   constructor(private http: HttpClient, private router: Router) {
     const storedUser = localStorage.getItem('user');
     this.currentUserSubject = new BehaviorSubject<User | null>(
       storedUser ? JSON.parse(storedUser) : null
     );
     this.currentUser$ = this.currentUserSubject.asObservable();
-   }
-  generateCASLoginUrl(): string {
-    // CAS server base URL
-    const casBaseUrl = 'https://sso.ihu.gr';
-
-    // URL of your Angular application's CAS callback endpoint
-    const serviceUrl = encodeURIComponent('http://booking.iee.ihu.gr/cas/callback');
-
-    // Construct the CAS login URL
-    return `${casBaseUrl}/login?service=${serviceUrl}`;
   }
+
+
   login(username: string, password: string): Observable<any> {
-    return this.http.post<any>(environment.apiUrl + '/login', {username, password}).pipe(
+    return this.http.post<any>(environment.apiUrl + '/login', { username, password }).pipe(
       map(response => {
         if (response.status === 'success') {
           this.storeToken(response.token);
@@ -63,44 +66,76 @@ export class AuthenticationService {
     return this.currentUserSubject.value;
   }
 
-  async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-    if (route.data['casCallback']) {
-      const ticket = route.queryParams['ticket'];
-      if (ticket) {
-        const params = new HttpParams().set('ticket', ticket);
-        try {
-          const response = await this.http.get<any>(`${environment.apiUrl}/cas/callback`, { params }).toPromise();
-          if (response.status === 'success') {
-            this.storeToken(response.token);
-            this.router.navigate([response.redirect_url]);
-          } else {
-            console.error(response.message);
-            this.router.navigate([response.redirect_url]);
-          }
-        } catch (error) {
-          console.error('CAS callback failed:', error);
-          this.router.navigate(['/login']);
-        }
-      } else {
-        console.error('CAS ticket missing');
-        this.router.navigate(['/login']);
-      }
-      return false; // Prevent the route from activating until the callback is handled
-    }
-    return true;
-  }
-
   storeToken(token: string) {
-    localStorage.setItem(this.tokenKey, token);
+    //this.accessToken = token;
+    localStorage.setItem('accessToken', token);
+    this.isAuthenticated$.next(true);
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    //return this.accessToken;
+    return localStorage.getItem('accessToken');
+  }
+
+  clearToken() {
+    //this.accessToken = null;
+    localStorage.removeItem('accessToken');
+    this.isAuthenticated$.next(false);
   }
 
   isAuthenticated(): any {
     const token = this.getToken();
-    return token ;//&& !this.jwtHelper.isTokenExpired(token);
+    return token != null;
+  }
+
+  logout(): Observable<any> {
+    return this.http.get<any>(environment.apiUrl + '/logout').pipe(
+      map(response => {        
+        if (response.status === 'success') {
+          localStorage.removeItem('user');
+          this.currentUserSubject.next(null);
+          this.clearToken();
+
+        } else {
+          console.error(response.message);
+        }
+        return response;
+      })
+    );
+  }
+
+  isTokenExpired(): boolean {
+    if (!this.getToken()) return true;
+    const { exp } = jwtDecode<JwtPayload>(this.getToken()!);
+    return Date.now() >= exp * 1000;
+  }
+
+  refreshToken(): Observable<string> {
+    if (this.isRefreshing) {
+      // If a refresh is already in progress, wait for it
+      return this.refreshSubject.asObservable().pipe(
+        switchMap(token => token ? of(token) : throwError(() => 'No token returned'))
+      );
+    }
+
+    this.isRefreshing = true;
+    this.refreshSubject.next(null);
+
+    return this.http.post<{ access_token: string }>('/api/refresh', {}).pipe(
+      map(res => {
+        const newToken = res.access_token;
+        this.storeToken(newToken);
+        this.isRefreshing = false;
+        this.refreshSubject.next(newToken);
+        return newToken;
+      }),
+      catchError(err => {
+        this.isRefreshing = false;
+        this.clearToken();
+        this.router.navigate(['/']);
+        return throwError(() => err);
+      })
+    );
   }
 
 }

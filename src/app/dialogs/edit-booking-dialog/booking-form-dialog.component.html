@@ -59,10 +59,7 @@
               <mat-select required [id]="chip.name+'startSelect'" (selectionChange)="onSelectionChange($event.value, chip.name, true)">
                 <mat-option *ngFor="let time of reqStartOptions[chip.name-1]" [value]="time">{{ time | date: 'HH:mm' }}</mat-option>
               </mat-select>
-            </mat-form-field>            
-            <span class="dash">
-              -
-            </span>
+            </mat-form-field>
             <mat-form-field>
               <mat-label>End</mat-label>
               <input matInput placeholder="hh:mm" (input)="onReqInputChange($event,chip.name, false)" [value]="chip.end | date: 'HH:mm'" [id]="chip.name+'endInput'" (click)="openSelect(chip.name+'endSelect')" class="times">
@@ -97,9 +94,6 @@
                 <mat-option *ngFor="let time of startOptions" [value]="time">{{ time | date: 'HH:mm' }}</mat-option>
               </mat-select>
             </mat-form-field>
-            <span class="dash">
-              -
-            </span>
             <mat-form-field>
               <mat-label>End</mat-label>
               <input matInput placeholder="hh:mm" [value]="selectedEnd | date: 'HH:mm'" (click)="endSelect.open()" class="times">

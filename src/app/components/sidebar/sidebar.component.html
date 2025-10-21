@@ -1,7 +1,7 @@
 <div class="sidebar" [class.open]="isOpen">
 
     <!-- Sidebar Main Items -->
-    <div class="sidebar-items" *ngFor="let item of items$ | async" (click)="changeLocation(item.location)">
+    <div class="sidebar-items" *ngFor="let item of items$ | async" (click)="doAction(item)">
       <i [ngClass]="item.icon"></i>
       <h3 class="item-style">
         {{ item.label }}

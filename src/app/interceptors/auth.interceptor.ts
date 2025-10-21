@@ -5,17 +5,34 @@ import {
   HttpInterceptor,
   HttpRequest
 } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, switchMap } from 'rxjs';
+import { AuthenticationService } from '../services/authentication/authentication.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-
+  constructor(private authenticationService: AuthenticationService) { }
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Get token from localStorage (or wherever you stored it after login)
-    const token = localStorage.getItem('auth_token');
-
-    // Only add the header if the token exists
-    if (token) {
+    const token = this.authenticationService.getToken();
+    console.log('isAuthenticated', this.authenticationService.isAuthenticated());
+    
+    if(!this.authenticationService.isAuthenticated()) {
+      return next.handle(req);
+    }
+    if (this.authenticationService.isTokenExpired()) {
+      // Token expired, refresh first
+      return this.authenticationService.refreshToken().pipe(
+        switchMap(newToken => {
+          const cloned = req.clone({
+            setHeaders: {
+              Authorization: `Bearer ${newToken}`
+            }
+          });
+          return next.handle(cloned);
+        })
+      );
+    } else {
+      // Token valid, attach and continue
       const cloned = req.clone({
         setHeaders: {
           Authorization: `Bearer ${token}`
@@ -23,8 +40,5 @@ export class AuthInterceptor implements HttpInterceptor {
       });
       return next.handle(cloned);
     }
-
-    // If no token, continue without modifying the request
-    return next.handle(req);
   }
 }

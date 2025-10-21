@@ -40,6 +40,7 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^2.30.0",
     "flatpickr": "^4.6.13",
+    "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
     "moment-timezone": "^0.5.45",
     "ng2-charts": "^6.0.0",
