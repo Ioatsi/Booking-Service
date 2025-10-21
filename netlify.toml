@@ -4,7 +4,10 @@ command = "npm install --force --legacy-peer-deps && npm run build --configurati
 
 # The folder Netlify should serve
 publish = "dist"
-
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 # Environment variables (no comments inside braces)
 [build.environment]
 NODE_VERSION = "22"
