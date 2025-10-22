@@ -12,9 +12,11 @@ import { AuthenticationService } from '../services/authentication/authentication
 export class AuthInterceptor implements HttpInterceptor {
   constructor(private authenticationService: AuthenticationService) { }
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    if (req.url.includes('/api/refresh')) {
+      return next.handle(req);
+    }
     // Get token from localStorage (or wherever you stored it after login)
     const token = this.authenticationService.getToken();
-    console.log('isAuthenticated', this.authenticationService.isAuthenticated());
     
     if(!this.authenticationService.isAuthenticated()) {
       return next.handle(req);

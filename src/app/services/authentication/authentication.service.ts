@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
-import { BehaviorSubject, catchError, map, Observable, of, switchMap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, filter, map, Observable, of, switchMap, take, throwError } from 'rxjs';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 
 import { jwtDecode } from 'jwt-decode';
@@ -90,7 +90,7 @@ export class AuthenticationService {
 
   logout(): Observable<any> {
     return this.http.get<any>(environment.apiUrl + '/logout').pipe(
-      map(response => {        
+      map(response => {
         localStorage.removeItem('user');
         this.currentUserSubject.next(null);
         this.clearToken();
@@ -107,30 +107,46 @@ export class AuthenticationService {
 
   refreshToken(): Observable<string> {
     if (this.isRefreshing) {
-      // If a refresh is already in progress, wait for it
+      // Wait for ongoing refresh to finish
       return this.refreshSubject.asObservable().pipe(
-        switchMap(token => token ? of(token) : throwError(() => 'No token returned'))
+        switchMap(token => {
+          if (token) {
+            // Got a new token from the previous refresh
+            return of(token);
+          } else {
+            // Wait again until a new token is emitted
+            return this.refreshSubject.pipe(
+              filter((t): t is string => t != null), // type guard tells TS t is string
+              take(1)
+            );
+          }
+        })
       );
     }
 
     this.isRefreshing = true;
     this.refreshSubject.next(null);
 
-    return this.http.post<{ access_token: string }>('/api/refresh', {}).pipe(
-      map(res => {
-        const newToken = res.access_token;
-        this.storeToken(newToken);
-        this.isRefreshing = false;
-        this.refreshSubject.next(newToken);
-        return newToken;
-      }),
-      catchError(err => {
-        this.isRefreshing = false;
-        this.clearToken();
-        this.router.navigate(['/']);
-        return throwError(() => err);
-      })
-    );
+    return this.http.post<any>(environment.apiUrl + '/refresh', {},
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+      }).pipe(
+        map(res => {
+          const newToken = res.token;
+          this.storeToken(newToken);
+          this.isRefreshing = false;
+          this.refreshSubject.next(newToken);
+          return newToken;
+        }),
+        catchError(err => {
+          this.isRefreshing = false;
+          localStorage.removeItem('user');
+          this.currentUserSubject.next(null);
+          this.clearToken();
+          this.router.navigate(['/']);
+          return throwError(() => err);
+        })
+      );
   }
 
 }
