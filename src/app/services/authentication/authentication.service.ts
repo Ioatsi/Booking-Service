@@ -91,14 +91,9 @@ export class AuthenticationService {
   logout(): Observable<any> {
     return this.http.get<any>(environment.apiUrl + '/logout').pipe(
       map(response => {        
-        if (response.status === 'success') {
-          localStorage.removeItem('user');
-          this.currentUserSubject.next(null);
-          this.clearToken();
-
-        } else {
-          console.error(response.message);
-        }
+        localStorage.removeItem('user');
+        this.currentUserSubject.next(null);
+        this.clearToken();
         return response;
       })
     );
